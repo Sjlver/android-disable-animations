@@ -1,0 +1,38 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "ch.epfl.sweng.disableanimations"
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.1.1'
+}
+
+// A task that automates granting the SET_ANIMATION_SCALE system permission
+def sdkDir = project.plugins.findPlugin('com.android.application').sdkHandler.getSdkFolder().getCanonicalPath()
+task grantAnimationPermission(type: Exec, dependsOn: 'installDebug') {
+    commandLine "$sdkDir/platform-tools/adb shell pm grant ch.epfl.sweng.disableanimations android.permission.SET_ANIMATION_SCALE".split(' ')
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('connected')) {
+        task.dependsOn grantAnimationPermission
+    }
+}
